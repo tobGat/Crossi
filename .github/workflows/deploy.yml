@@ -1,0 +1,40 @@
+name: Deploy Crossi
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Frontend bauen
+        working-directory: client
+        run: npm ci && npm run build
+
+      - name: SSH einrichten
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Frontend deployen
+        run: |
+          ssh root@46.225.168.25 'mkdir -p /var/www/crossi'
+          scp -r client/dist/* root@46.225.168.25:/var/www/crossi/
+
+      - name: Backend deployen & neustarten
+        run: |
+          ssh root@46.225.168.25 'mkdir -p /opt/apps/crossi'
+          scp server/index.js server/crossword.js server/package.json root@46.225.168.25:/opt/apps/crossi/
+          ssh root@46.225.168.25 'cd /opt/apps/crossi && npm install --production && (pm2 restart crossi || PORT=3006 pm2 start index.js --name crossi) && pm2 save'
