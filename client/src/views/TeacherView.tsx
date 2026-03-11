@@ -160,6 +160,7 @@ export default function TeacherView({ onBack }: Props) {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
           >
+            <img src="/logo_crossi.png" alt="Crossi" className="landing-logo" style={{ marginBottom: '1rem' }} />
             <div className="drop-icon">📄</div>
             <p className="drop-text">Excel- oder LibreOffice-Datei hier ablegen</p>
             <p className="drop-hint">
